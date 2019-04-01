@@ -1,0 +1,90 @@
+  public async Task<JsonResult> GetDatas()
+        {
+            //  var columnNam = new[] { "NatureOfBusinessID", "NatureOfBusinessName", "IsActive" };
+
+            var colModelList = new[] {
+                new {label="Id", name = "NatureOfBusinessID",width = 100 },
+                new {label="Name", name = "NatureOfBusinessName", width = 200},
+                new {label="IsActive", name = "IsActive", width = 500 }
+            };
+
+            return Json(colModelList);
+
+        }
+        public async Task<JsonResult> GetNatList(string word, int rows)
+        {
+            int page = Convert.ToInt32(Request.Query["page"]);
+            int length = Convert.ToInt32(Request.Query["rows"]);
+            string sortColumnName = Request.Query["sidx"];
+            string sortDirection = Request.Query["sord"];
+            bool _search = Convert.ToBoolean(Request.Query["_search"]);
+            string searchColumnName = Request.Query["searchField"];
+            string searchKeyword = Request.Query["searchString"];
+            string searchOper = Request.Query["searchOper"];
+
+
+            //#1 Create Instance of DatabaseContext class for Accessing Database.  
+            var dbFactory = DbFactoryProvider.GetFactory();
+            using (var db = (SqlConnection)dbFactory.GetConnection())
+            {
+                //#2 Setting Paging  
+                int pageIndex = Convert.ToInt32(page) - 1;
+                int pageSize = rows;
+
+                //#3 Linq Query to Get NatureOfBusiness   
+                var natList = await _natureOfBusinessService.NatureOfBusinessCrudService.GetListAsync();
+                var natList1 = natList.ToList();
+
+                var Results = natList1.Select(
+                    a => new
+                    {
+                        a.NatureOfBusinessID,
+                        a.NatureOfBusinessName,
+                        a.IsActive
+                    });
+
+                //#4 Get Total Row Count  
+                int totalRecords = Results.Count();
+                var totalPages = (int)Math.Ceiling((float)totalRecords / (float)rows);
+
+
+                //#5 Setting Sorting  
+                if (sortDirection.ToUpper() == "DESC")
+                {
+                    Results = Results.OrderByDescending(s => s.NatureOfBusinessID);
+                   // Results = Results.Skip(pageIndex * pageSize).Take(pageSize);
+                }
+                else
+                {
+                    Results = Results.OrderBy(s => s.NatureOfBusinessID);
+                    Results = Results.Skip(pageIndex * pageSize).Take(pageSize);
+                }
+                //#6 Setting Search  
+                if (!string.IsNullOrEmpty(searchKeyword))
+                {
+                    if(searchColumnName=="NatureOfBusinessID")
+                    {
+                        Results = Results.Where(m => m.NatureOfBusinessID == Convert.ToInt32(searchKeyword));
+                    }
+                    else
+                    {
+                        Results = Results.Where(m => m.NatureOfBusinessName == searchKeyword);
+
+                    }
+                }
+
+
+
+
+                //#7 Sending Json Object to View.  
+                var jsonData = new
+                {
+                    total = totalPages,
+                    page,
+                    records = totalRecords,
+                    rows = Results
+
+                };
+                return Json(jsonData);
+            }
+        }
