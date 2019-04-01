@@ -1,0 +1,46 @@
+<table id="list"></table>
+<div id="pager"></div>
+
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+<link href="~/Resources/jqGrid/jquery-ui.min.css" rel="stylesheet" />
+<link href="~/Resources/jqGrid/ui.jqgrid.css" rel="stylesheet" />
+<script src="~/Resources/jqGrid/grid.locale-en.js"></script>
+<script src="~/Resources/jqGrid/jquery.jqGrid.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $.ajax(
+            {
+                type: "get",
+                url: "/owrla/natureofbusiness/GetDatas",
+                data: "",
+                dataType: "json",
+                success: function (result) {
+                    debugger
+                    var data = result;
+                    aaa(data);
+                }
+            });
+    });
+
+    function aaa(data) {
+        $grid = $("#list").jqGrid({
+            url: "/owrla/natureofbusiness/GetNatList",
+            mtype: "GET",
+            datatype: "json",
+
+            colModel: data,
+            viewrecords: true,
+            height: 250,
+            rowList: [10, 20, 30, 40],
+            pager: "#pager",
+        });
+        debugger;
+
+        $("#list").jqGrid('navGrid', '#pager', { edit: false, add: false, del: false, search: true });
+        //  jQuery("#list").jqGrid('filterToolbar', { stringResult: true, searchOnEnter: false });
+    }
+
+       
+       
+    </script>
